@@ -12,10 +12,11 @@ mock_user_id = uuid.uuid4()
 mock_user = User(
     id=mock_user_id,
     email="test@example.com",
-    hashed_password="hashed_password",
+    full_name="Test User",
+    phone=None,
+    password_hash="hashed_password",
     is_active=True,
     created_at=datetime.now(timezone.utc),
-    updated_at=datetime.now(timezone.utc),
 )
 
 
@@ -67,13 +68,16 @@ async def test_create_user_success(client: AsyncClient):
     async def mock_refresh(user):
         user.id = uuid.uuid4()
         user.created_at = datetime.now(timezone.utc)
-        user.updated_at = datetime.now(timezone.utc)
     db_mock.refresh = mock_refresh
     db_mock.add = MagicMock()
 
     app.dependency_overrides[get_db] = lambda: db_mock
 
-    payload = {"email": "newuser@example.com", "password": "supersecretpassword"}
+    payload = {
+        "email": "newuser@example.com",
+        "full_name": "New User",
+        "password": "supersecretpassword"
+    }
 
     try:
         response = await client.post("/api/v1/users/", json=payload)

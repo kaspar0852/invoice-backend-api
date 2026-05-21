@@ -1,13 +1,13 @@
 import uuid
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Boolean, DateTime, func, Uuid
+from sqlalchemy import String, DateTime, func, Uuid, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class User(Base):
-    __tablename__ = "users"
+class Customer(Base):
+    __tablename__ = "customers"
 
     id: Mapped[uuid.UUID] = mapped_column(
         "Id",
@@ -16,16 +16,15 @@ class User(Base):
         default=uuid.uuid4,
         index=True,
     )
-    full_name: Mapped[str] = mapped_column(
-        "FullName",
-        String(255),
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        "BusinessId",
+        Uuid(as_uuid=True),
+        ForeignKey("businesses.Id", ondelete="CASCADE"),
         nullable=False,
     )
-    email: Mapped[str] = mapped_column(
-        "Email",
+    name: Mapped[str] = mapped_column(
+        "Name",
         String(255),
-        unique=True,
-        index=True,
         nullable=False,
     )
     phone: Mapped[Optional[str]] = mapped_column(
@@ -33,16 +32,20 @@ class User(Base):
         String(50),
         nullable=True,
     )
-    password_hash: Mapped[str] = mapped_column(
-        "PasswordHash",
+    email: Mapped[Optional[str]] = mapped_column(
+        "Email",
         String(255),
-        nullable=False,
+        nullable=True,
     )
-    is_active: Mapped[bool] = mapped_column(
-        "IsActive",
-        Boolean,
-        default=True,
-        nullable=False,
+    address: Mapped[Optional[str]] = mapped_column(
+        "Address",
+        String(500),
+        nullable=True,
+    )
+    vat_number: Mapped[Optional[str]] = mapped_column(
+        "VatNumber",
+        String(100),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         "CreatedAt",

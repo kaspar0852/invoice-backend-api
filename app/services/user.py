@@ -54,7 +54,9 @@ class UserService:
         hashed = self.hash_password(schema.password)
         db_user = User(
             email=schema.email,
-            hashed_password=hashed,
+            full_name=schema.full_name,
+            phone=schema.phone,
+            password_hash=hashed,
             is_active=schema.is_active,
         )
         return await self.repository.create(db_user)
@@ -71,8 +73,14 @@ class UserService:
                 )
             db_user.email = schema.email
 
+        if schema.full_name is not None:
+            db_user.full_name = schema.full_name
+
+        if schema.phone is not None:
+            db_user.phone = schema.phone
+
         if schema.password is not None:
-            db_user.hashed_password = self.hash_password(schema.password)
+            db_user.password_hash = self.hash_password(schema.password)
 
         if schema.is_active is not None:
             db_user.is_active = schema.is_active

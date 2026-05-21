@@ -1,13 +1,13 @@
 import uuid
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import String, Boolean, DateTime, func, Uuid
+from sqlalchemy import String, DateTime, func, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class User(Base):
-    __tablename__ = "users"
+class Business(Base):
+    __tablename__ = "businesses"
 
     id: Mapped[uuid.UUID] = mapped_column(
         "Id",
@@ -16,33 +16,35 @@ class User(Base):
         default=uuid.uuid4,
         index=True,
     )
-    full_name: Mapped[str] = mapped_column(
-        "FullName",
+    name: Mapped[str] = mapped_column(
+        "Name",
         String(255),
         nullable=False,
     )
-    email: Mapped[str] = mapped_column(
-        "Email",
-        String(255),
-        unique=True,
-        index=True,
-        nullable=False,
+    vat_number: Mapped[Optional[str]] = mapped_column(
+        "VatNumber",
+        String(100),
+        nullable=True,
+    )
+    pan_number: Mapped[Optional[str]] = mapped_column(
+        "PanNumber",
+        String(100),
+        nullable=True,
+    )
+    address: Mapped[Optional[str]] = mapped_column(
+        "Address",
+        String(500),
+        nullable=True,
     )
     phone: Mapped[Optional[str]] = mapped_column(
         "Phone",
         String(50),
         nullable=True,
     )
-    password_hash: Mapped[str] = mapped_column(
-        "PasswordHash",
-        String(255),
-        nullable=False,
-    )
-    is_active: Mapped[bool] = mapped_column(
-        "IsActive",
-        Boolean,
-        default=True,
-        nullable=False,
+    logo_url: Mapped[Optional[str]] = mapped_column(
+        "LogoUrl",
+        String(500),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         "CreatedAt",
