@@ -7,7 +7,9 @@ from app.repositories.user import UserRepository
 from app.services.user import UserService
 from app.schemas.user import UserCreate, UserUpdate, UserRead
 
-router = APIRouter()
+from app.core.route_class import StandardAPIRoute
+
+router = APIRouter(route_class=StandardAPIRoute)
 
 
 def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
