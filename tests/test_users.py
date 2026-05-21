@@ -33,7 +33,7 @@ async def test_get_user_not_found(client: AsyncClient):
     try:
         response = await client.get(f"/api/v1/users/{uuid.uuid4()}")
         assert response.status_code == 404
-        assert response.json()["detail"].endswith("not found")
+        assert response.json()["error"].endswith("not found")
     finally:
         app.dependency_overrides.clear()
 
@@ -50,7 +50,7 @@ async def test_get_user_success(client: AsyncClient):
     try:
         response = await client.get(f"/api/v1/users/{mock_user_id}")
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["result"]
         assert data["email"] == "test@example.com"
         assert data["id"] == str(mock_user_id)
     finally:
@@ -84,8 +84,21 @@ async def test_create_user_success(client: AsyncClient):
         # Because create actually executes commit & refresh on the returned object,
         # and we mocked the session, we should get a valid JSON response matching UserRead
         assert response.status_code == 201
-        data = response.json()
+        data = response.json()["result"]
         assert data["email"] == "newuser@example.com"
         assert "id" in data
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.anyio
+async def test_create_user_invalid_email(client: AsyncClient):
+    payload = {
+        "email": "invalid-email-address",
+        "full_name": "New User",
+        "password": "supersecretpassword"
+    }
+
+    response = await client.post("/api/v1/users/", json=payload)
+    assert response.status_code == 422
+    assert "value is not a valid email address" in str(response.json()["error"])
