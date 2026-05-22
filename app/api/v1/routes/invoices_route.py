@@ -39,7 +39,6 @@ async def list_invoices(
 ) -> List[InvoiceRead]:
     return await service.list_invoices(business_id)
 
-
 @router.get("/{invoice_id}", response_model=InvoiceRead)
 async def get_invoice(
     invoice_id: uuid.UUID,

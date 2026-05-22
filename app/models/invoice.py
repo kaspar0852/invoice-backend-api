@@ -20,6 +20,13 @@ class InvoiceStatus(str, enum.Enum):
     CANCELLED = "Cancelled"
 
 
+INVOICE_STATUS_ENUM = Enum(
+    InvoiceStatus,
+    name="invoice_status_enum",
+    values_callable=lambda enum_cls: [member.value for member in enum_cls],
+)
+
+
 class Invoice(Base):
     __tablename__ = "invoices"
 
@@ -51,7 +58,7 @@ class Invoice(Base):
     )
     status: Mapped[InvoiceStatus] = mapped_column(
         "Status",
-        Enum(InvoiceStatus, name="invoice_status_enum"),
+        INVOICE_STATUS_ENUM,
         default=InvoiceStatus.DRAFT,
         nullable=False,
     )

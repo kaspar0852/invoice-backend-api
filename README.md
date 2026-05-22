@@ -46,6 +46,9 @@ project-root/
 ├── alembic/
 │   ├── versions/
 │   └── env.py                   # Async-configured migrations environment
+├── scripts/
+│   ├── seed_demo_data.sh        # Seed realistic demo data
+│   └── show_sample_data.sh      # Inspect sample rows from all main tables
 ├── tests/
 │   └── ...                      # Healthcheck and mocked route tests
 ├── .env.example
@@ -90,6 +93,18 @@ project-root/
    ```
    *Open [http://localhost:8000/docs](http://localhost:8000/docs) to browse Swagger UI documentation.*
 
+5. **Optional: Seed Realistic Demo Data**
+   ```bash
+   ./scripts/seed_demo_data.sh
+   ```
+   *Seeds linked demo records for businesses, users, memberships, customers, invoices, invoice items, and payments.*
+
+6. **Optional: Inspect Sample Data**
+   ```bash
+   ./scripts/show_sample_data.sh 15
+   ```
+   *Prints readable sample rows from the main tables using joined, business-friendly views.*
+
 ---
 
 ### Docker setup (Recommended)
@@ -115,3 +130,32 @@ To run the test suite (uses `pytest` and `pytest-asyncio` with mocked database i
 PYTHONPATH=. uv run pytest
 ```
 
+---
+
+## 🧰 Demo Data Scripts
+
+The repository includes two shell utilities for local development:
+
+1. **Seed realistic demo data**
+   ```bash
+   ./scripts/seed_demo_data.sh
+   ```
+   *Default behavior seeds `100` customers, `100` invoices, `200` invoice items, and matching payment records.*
+
+   You can pass a custom customer count:
+   ```bash
+   ./scripts/seed_demo_data.sh 250
+   ```
+
+2. **View readable sample data**
+   ```bash
+   ./scripts/show_sample_data.sh
+   ```
+   *Shows data from `users`, `businesses`, `user_businesses`, `customers`, `invoices`, `invoice_items`, and `payments` in a readable format.*
+
+   You can pass a custom row limit from `1` to `15`:
+   ```bash
+   ./scripts/show_sample_data.sh 15
+   ```
+
+Both scripts read `.env` first and fall back to `.env.example` if needed.

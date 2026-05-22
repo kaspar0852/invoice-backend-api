@@ -13,6 +13,13 @@ class UserRole(str, enum.Enum):
     ACCOUNTANT = "Accountant"
 
 
+USER_ROLE_ENUM = Enum(
+    UserRole,
+    name="user_role_enum",
+    values_callable=lambda enum_cls: [member.value for member in enum_cls],
+)
+
+
 class UserBusiness(Base):
     __tablename__ = "user_businesses"
 
@@ -37,7 +44,7 @@ class UserBusiness(Base):
     )
     role: Mapped[UserRole] = mapped_column(
         "Role",
-        Enum(UserRole, name="user_role_enum"),
+        USER_ROLE_ENUM,
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(

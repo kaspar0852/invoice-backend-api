@@ -12,6 +12,10 @@ class CustomerRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_customer_by_id_and_business(self, customer_id: UUID, business_id: UUID) -> Optional[Customer]:
+        pass
+
+    @abstractmethod
     async def create_customer(self, customer: Customer) -> Customer:
         pass
 
@@ -36,6 +40,15 @@ class CustomerRepository(CustomerRepositoryInterface):
     async def get_customer_by_id(self, customer_id: UUID) -> Optional[Customer]:
         result = await self.db.execute(
             select(Customer).where(Customer.id == customer_id)
+        )
+        return result.scalars().first()
+
+    async def get_customer_by_id_and_business(self, customer_id: UUID, business_id: UUID) -> Optional[Customer]:
+        result = await self.db.execute(
+            select(Customer).where(
+                Customer.id == customer_id,
+                Customer.business_id == business_id
+            )
         )
         return result.scalars().first()
 
