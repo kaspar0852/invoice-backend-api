@@ -1,11 +1,14 @@
 import enum
 import uuid
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from decimal import Decimal
 from sqlalchemy import String, DateTime, Date, Numeric, func, Uuid, ForeignKey, Enum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.invoice_item import InvoiceItem
 
 
 class InvoiceStatus(str, enum.Enum):
@@ -93,4 +96,11 @@ class Invoice(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+    items: Mapped[list["InvoiceItem"]] = relationship(
+        "InvoiceItem",
+        back_populates="invoice",
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
