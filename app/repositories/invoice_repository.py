@@ -34,6 +34,10 @@ class InvoiceRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def list_customer_invoices(self, customer_id: UUID, business_id: UUID, valid_statuses: Optional[List[str]] = None) -> List[Invoice]:
+        pass
+
+    @abstractmethod
     async def delete_invoice(self, invoice_id: UUID) -> None:
         pass
 
@@ -83,6 +87,24 @@ class InvoiceRepository(InvoiceRepositoryInterface):
         stmt = select(Invoice)
         if business_id is not None:
             stmt = stmt.where(Invoice.business_id == business_id)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    # async def get_customer_invoices(self, customer_id: UUID, business_id: UUID) -> List[Invoice]:
+    #     stmt = select(Invoice).where(
+    #         Invoice.customer_id == customer_id,
+    #         Invoice.business_id == business_id
+    #     )
+    #     result = await self.db.execute(stmt)
+    #     return list(result.scalars().all())
+
+    async def list_customer_invoices(self, customer_id: UUID, business_id: UUID, valid_statuses: Optional[List[str]] = None) -> List[Invoice]:
+        stmt = select(Invoice).where(
+            Invoice.customer_id == customer_id,
+            Invoice.business_id == business_id
+        )
+        if valid_statuses:
+            stmt = stmt.where(Invoice.status.in_(valid_statuses))
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 

@@ -14,6 +14,25 @@ class PaymentMethod(str, enum.Enum):
     MOBILE = "Mobile"
     CHEQUE = "Cheque"
 
+class PaymentStatus(str, enum.Enum):
+    PENDING = "Pending"
+    SETTLED = "Settled"
+    FAILED = "Failed"
+    REFUNDED = "Refunded"   
+
+
+PAYMENT_METHOD_ENUM = Enum(
+    PaymentMethod,
+    name="payment_method_enum",
+    values_callable=lambda enum_cls: [member.value for member in enum_cls],
+)
+
+PAYMENT_STATUS_ENUM = Enum(
+    PaymentStatus,
+    name="payment_status_enum",
+    values_callable=lambda enum_cls: [member.value for member in enum_cls],
+)
+
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -49,8 +68,15 @@ class Payment(Base):
     )
     payment_method: Mapped[PaymentMethod] = mapped_column(
         "PaymentMethod",
-        Enum(PaymentMethod, name="payment_method_enum"),
+        PAYMENT_METHOD_ENUM,
         nullable=False,
+    )
+    status: Mapped[PaymentStatus] = mapped_column(
+        "Status",
+        PAYMENT_STATUS_ENUM,
+        nullable=False,
+        default=PaymentStatus.PENDING,
+        server_default="Pending",
     )
     reference: Mapped[Optional[str]] = mapped_column(
         "Reference",

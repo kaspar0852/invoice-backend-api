@@ -87,6 +87,30 @@ async def test_get_invoice_success(client: AsyncClient):
 
 
 @pytest.mark.anyio
+async def test_get_customer_invoices_success(client: AsyncClient):
+    db_mock = AsyncMock()
+    result_mock = MagicMock()
+    mock_invoice = get_mock_invoice()
+    result_mock.scalars.return_value.all.return_value = [mock_invoice]
+    db_mock.execute.return_value = result_mock
+
+    app.dependency_overrides[get_db] = lambda: db_mock
+
+    try:
+        response = await client.get(
+            f"/api/v1/invoices/customer/{mock_customer_id}",
+            params={"business_id": str(mock_business_id)},
+        )
+        assert response.status_code == 200
+        data = response.json()["result"]
+        assert len(data) == 1
+        assert data[0]["customer_id"] == str(mock_customer_id)
+        assert data[0]["business_id"] == str(mock_business_id)
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.anyio
 async def test_create_invoice_success(client: AsyncClient):
     db_mock = AsyncMock()
     
