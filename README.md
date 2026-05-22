@@ -109,7 +109,7 @@ docker compose up --build
 ## 🧪 Testing
 
 To run the test suite (uses `pytest` and `pytest-asyncio` with mocked database interactions):
-To run the test suite (uses `pytest` and `pytest-asyncio` with mocked database interactions):
+
 
 ```bash
 PYTHONPATH=. uv run pytest
