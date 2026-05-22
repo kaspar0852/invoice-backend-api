@@ -1,9 +1,12 @@
 import uuid
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from decimal import Decimal
 from sqlalchemy import String, Numeric, Uuid, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.invoice import Invoice
 
 
 class InvoiceItem(Base):
@@ -51,4 +54,9 @@ class InvoiceItem(Base):
         "LineTotal",
         Numeric(12, 2),
         nullable=False,
+    )
+
+    invoice: Mapped["Invoice"] = relationship(
+        "Invoice",
+        back_populates="items"
     )
