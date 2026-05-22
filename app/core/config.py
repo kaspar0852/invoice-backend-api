@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+from functools import lru_cache
 
 
 class Settings(BaseSettings):
@@ -24,6 +25,12 @@ class Settings(BaseSettings):
     # Database connection URL
     DATABASE_URL: Optional[str] = None
 
+    # JWT Authentication
+    JWT_SECRET_KEY: str = "change-me-in-production-use-a-long-random-secret"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
     @property
     def async_database_url(self) -> str:
         if self.DATABASE_URL:
@@ -33,4 +40,11 @@ class Settings(BaseSettings):
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
 
-settings = Settings()
+
+@lru_cache
+def get_settings() -> "Settings":
+    """Cached settings instance — use `settings` for all direct imports."""
+    return Settings()
+
+
+settings = get_settings()
