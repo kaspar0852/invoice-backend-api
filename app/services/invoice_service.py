@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from app.models.invoice import Invoice, InvoiceStatus
 from app.models.invoice_item import InvoiceItem
 from app.repositories.invoice_repository import InvoiceRepositoryInterface
-from app.schemas.invoice_dto import InvoiceCreate, InvoiceUpdate, InvoiceRead
+from app.schemas.invoice_dto import InvoiceCreate, InvoiceUpdate, InvoiceRead, InvoiceSearchResponse
 
 
 class InvoiceService:
@@ -149,9 +149,40 @@ class InvoiceService:
             )
         return InvoiceRead.model_validate(invoice)
 
-    async def list_invoices(self, business_id: Optional[UUID] = None) -> List[InvoiceRead]:
-        invoices = await self.repository.list_invoices(business_id)
-        return [InvoiceRead.model_validate(inv) for inv in invoices]
+    async def search_invoices(
+        self,
+        business_id: UUID,
+        customer_id: Optional[UUID] = None,
+        invoice_number: Optional[str] = None,
+        customer_name: Optional[str] = None,
+        status: Optional[List[InvoiceStatus]] = None,
+        created_after: Optional[date] = None,
+        created_before: Optional[date] = None,
+        due_after: Optional[date] = None,
+        due_before: Optional[date] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> InvoiceSearchResponse:
+        invoices, total_count = await self.repository.search_invoices(
+            business_id=business_id,
+            customer_id=customer_id,
+            invoice_number=invoice_number,
+            customer_name=customer_name,
+            status=status,
+            created_after=created_after,
+            created_before=created_before,
+            due_after=due_after,
+            due_before=due_before,
+            limit=limit,
+            offset=offset,
+        )
+        return InvoiceSearchResponse(
+            items=[InvoiceRead.model_validate(inv) for inv in invoices],
+            total=total_count,
+            limit=limit,
+            offset=offset,
+            has_more=(offset + limit) < total_count,
+        )
 
     async def update_invoice(self, invoice_id: UUID, schema: InvoiceUpdate) -> InvoiceRead:
         invoice = await self.repository.get_by_id(invoice_id)
@@ -263,3 +294,55 @@ class InvoiceService:
             )
 
         await self.repository.delete_invoice(invoice_id)
+
+    async def update_status(self, invoice_id: UUID, new_status: InvoiceStatus) -> InvoiceRead:
+        invoice = await self.repository.get_by_id(invoice_id)
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found"
+            )
+
+        if invoice.status == InvoiceStatus.CANCELLED:
+            if new_status != InvoiceStatus.CANCELLED:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cancelled invoices cannot be transitioned to any other status"
+                )
+        elif invoice.status == InvoiceStatus.PAID:
+            if new_status != InvoiceStatus.PAID:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Paid invoices cannot be transitioned to any other status"
+                )
+        elif invoice.status == InvoiceStatus.DRAFT:
+            if new_status not in (InvoiceStatus.SENT, InvoiceStatus.CANCELLED):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Draft invoices can only transition to Sent or Cancelled"
+                )
+
+        if invoice.status != new_status:
+            invoice.status = new_status
+            invoice = await self.repository.update_invoice(invoice)
+
+        return InvoiceRead.model_validate(invoice)
+
+    async def check_and_mark_overdue(self, invoice_id: UUID) -> InvoiceRead:
+        invoice = await self.repository.get_by_id(invoice_id)
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found"
+            )
+
+        if (
+            invoice.due_date is not None
+            and invoice.due_date < date.today()
+            and invoice.status in (InvoiceStatus.SENT, InvoiceStatus.PARTIAL)
+        ):
+            invoice.status = InvoiceStatus.OVERDUE
+            invoice = await self.repository.update_invoice(invoice)
+
+        return InvoiceRead.model_validate(invoice)
+
