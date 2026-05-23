@@ -25,6 +25,12 @@ class TokenPayload(BaseModel):
     type: str
 
 
+class LogoutRequest(BaseModel):
+    """Payload expected on POST /auth/logout to invalidate refresh token as well."""
+    
+    refresh_token: str | None = None
+
+
 class RegisterRequest(BaseModel):
     """Payload expected on POST /auth/register."""
 

@@ -1,15 +1,19 @@
+from datetime import datetime, timezone
 from fastapi import HTTPException, status
 
+from app.models.token_blacklist import TokenBlacklist
 from app.models.user import User
 from app.repositories.user import UserRepositoryInterface
-from app.schemas.auth_dto import LoginRequest, TokenResponse, RegisterRequest, RegisterResponse
+from app.repositories.token_blacklist_repository import TokenBlacklistRepository
+from app.schemas.auth_dto import LoginRequest, TokenResponse, RegisterRequest, RegisterResponse, LogoutRequest
 from app.schemas.user import UserRead
-from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
+from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 
 
 class AuthService:
-    def __init__(self, repository: UserRepositoryInterface):
+    def __init__(self, repository: UserRepositoryInterface, blacklist_repository: TokenBlacklistRepository):
         self.repository = repository
+        self.blacklist_repository = blacklist_repository
 
     async def register(self, data: RegisterRequest) -> RegisterResponse:
         """Register a new user account and return tokens immediately (auto-login).
@@ -71,3 +75,25 @@ class AuthService:
             access_token=create_access_token(subject=subject),
             refresh_token=create_refresh_token(subject=subject),
         )
+
+    async def logout(self, access_token: str, request: LogoutRequest) -> None:
+        """Logout by blacklisting the access token and optional refresh token.
+        
+        This prevents the stateless JWTs from being used again before they expire naturally.
+        """
+        # Blacklist the access token
+        try:
+            payload = decode_token(access_token)
+            exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+            await self.blacklist_repository.add(TokenBlacklist(token=access_token, expires_at=exp))
+        except Exception:
+            pass  # If it's already expired or invalid, we don't need to do anything
+            
+        # Blacklist the refresh token if provided
+        if request.refresh_token:
+            try:
+                rt_payload = decode_token(request.refresh_token)
+                rt_exp = datetime.fromtimestamp(rt_payload["exp"], tz=timezone.utc)
+                await self.blacklist_repository.add(TokenBlacklist(token=request.refresh_token, expires_at=rt_exp))
+            except Exception:
+                pass
