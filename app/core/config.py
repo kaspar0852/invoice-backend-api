@@ -23,9 +23,9 @@ class Settings(BaseSettings):
 
     SMTP_HOST: Optional[str] = "smtp.gmail.com"
     SMTP_PORT: Optional[int] = 587
-    SMTP_USERNAME: Optional[str] = "suvambradman@gmail.com"
-    SMTP_PASSWORD: Optional[str] = "qcun kccd bdms phtb"
-    SMTP_FROM_NAME: Optional[str] = "Invoice System <suvambradman@gmail.com>"
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_NAME: Optional[str] = "Invoice System"
 
     # Database connection URL
     DATABASE_URL: Optional[str] = None
