@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 from app.core.config import settings
 from app.core.route_class import StandardAPIRoute
 from app.api.v1 import api_router
@@ -48,7 +49,7 @@ def create_app() -> FastAPI:
             content={
                 "success": False,
                 "status": 422,
-                "error": exc.errors()
+                "error": jsonable_encoder(exc.errors())
             }
         )
 

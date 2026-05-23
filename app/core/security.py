@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any
 
 from jose import JWTError, jwt
 from pwdlib import PasswordHash
@@ -8,12 +8,6 @@ from fastapi import HTTPException, status
 
 from app.core.config import settings
 
-# ---------------------------------------------------------------------------
-# Password hashing
-# ---------------------------------------------------------------------------
-
-# Single shared PasswordHash instance using bcrypt as the hashing backend.
-# This is intentionally module-level so the hasher is constructed once.
 _password_hasher = PasswordHash((BcryptHasher(),))
 
 
@@ -36,11 +30,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return _password_hasher.verify(plain_password, hashed_password)
 
 
-# ---------------------------------------------------------------------------
-# JWT token handling
-# ---------------------------------------------------------------------------
-
-def create_access_token(subject: str, extra_claims: Optional[dict] = None) -> str:
+def create_access_token(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
     """Create a signed JWT access token.
 
     :param subject: Unique identifier embedded in `sub` (typically the user UUID).
@@ -50,10 +40,10 @@ def create_access_token(subject: str, extra_claims: Optional[dict] = None) -> st
     now = datetime.now(timezone.utc)
     expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    payload: dict = {
+    payload: dict[str, Any] = {
         "sub": subject,
         "exp": expire,
-        "iat": now,
+        "iat": now,  # Issued at
         "type": "access",
     }
 
@@ -72,7 +62,7 @@ def create_refresh_token(subject: str) -> str:
     now = datetime.now(timezone.utc)
     expire = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
-    payload: dict = {
+    payload: dict[str, Any] = {
         "sub": subject,
         "exp": expire,
         "iat": now,
@@ -82,7 +72,7 @@ def create_refresh_token(subject: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, Any]:
     """Decode and cryptographically verify a JWT token.
 
     Validates the signature, expiry, and structure in one step.

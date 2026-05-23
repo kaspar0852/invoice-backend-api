@@ -11,8 +11,6 @@ class UserService:
     def __init__(self, repository: UserRepositoryInterface):
         self.repository = repository
 
-    # hash_password and verify_password are provided by app.core.security
-
     async def get_user_by_id(self, user_id: uuid.UUID) -> UserRead:
         user = await self.repository.get_by_id(user_id)
 
