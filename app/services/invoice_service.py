@@ -153,6 +153,14 @@ class InvoiceService:
         invoices = await self.repository.list_invoices(business_id)
         return [InvoiceRead.model_validate(inv) for inv in invoices]
 
+    async def list_customer_invoices(
+        self,
+        customer_id: UUID,
+        business_id: UUID,
+    ) -> List[InvoiceRead]:
+        invoices = await self.repository.list_customer_invoices(customer_id, business_id)
+        return [InvoiceRead.model_validate(inv) for inv in invoices]
+
     async def update_invoice(self, invoice_id: UUID, schema: InvoiceUpdate) -> InvoiceRead:
         invoice = await self.repository.get_by_id(invoice_id)
         if not invoice:

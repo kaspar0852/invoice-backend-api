@@ -132,7 +132,7 @@ class CustomerService:
                 detail="Customer not found"
             )
 
-        invoices = await self.invoice_repository.get_customer_invoices(customer_id, business_id)
+        invoices = await self.invoice_repository.list_customer_invoices(customer_id, business_id)
 
         if not invoices:
             raise HTTPException(

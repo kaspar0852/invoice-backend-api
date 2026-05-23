@@ -39,6 +39,15 @@ async def list_invoices(
 ) -> List[InvoiceRead]:
     return await service.list_invoices(business_id)
 
+
+@router.get("/customer/{customer_id}", response_model=List[InvoiceRead])
+async def list_customer_invoices(
+    customer_id: uuid.UUID,
+    business_id: uuid.UUID = Query(...),
+    service: InvoiceService = Depends(get_invoice_service),
+) -> List[InvoiceRead]:
+    return await service.list_customer_invoices(customer_id, business_id)
+
 @router.get("/{invoice_id}", response_model=InvoiceRead)
 async def get_invoice(
     invoice_id: uuid.UUID,
