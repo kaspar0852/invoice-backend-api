@@ -9,6 +9,11 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 import re
+from typing import List
+
+from app.schemas.invoice_dto import InvoiceRead
+from app.schemas.payment_dto import PaymentRead
+from decimal import Decimal
 
 
 class CustomerBase(BaseModel):
@@ -81,3 +86,15 @@ class CustomerRead(CustomerBase):
             vat_number=customer.vat_number,
             created_at=customer.created_at,
         )
+
+class CustomerBalance(BaseModel):
+    customer_id: UUID
+    outstanding_balance: Decimal
+
+class CustomerTransactionHistory(BaseModel):
+    customer: CustomerRead
+    invoices: List[InvoiceRead]
+    payments: List[PaymentRead]
+    total_invoiced: Decimal
+    total_paid: Decimal
+    outstanding_balance: Decimal

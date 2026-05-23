@@ -32,7 +32,10 @@ async def test_get_customer_not_found(client: AsyncClient):
     app.dependency_overrides[get_db] = lambda: db_mock
 
     try:
-        response = await client.get(f"/api/v1/customers/{uuid.uuid4()}")
+        response = await client.get(
+            f"/api/v1/customers/{uuid.uuid4()}",
+            params={"business_id": str(mock_business_id)},
+        )
         assert response.status_code == 404
         assert response.json()["error"].endswith("not found")
     finally:
@@ -49,7 +52,10 @@ async def test_get_customer_success(client: AsyncClient):
     app.dependency_overrides[get_db] = lambda: db_mock
 
     try:
-        response = await client.get(f"/api/v1/customers/{mock_customer_id}")
+        response = await client.get(
+            f"/api/v1/customers/{mock_customer_id}",
+            params={"business_id": str(mock_business_id)},
+        )
         assert response.status_code == 200
         data = response.json()["result"]
         assert data["email"] == "john@example.com"

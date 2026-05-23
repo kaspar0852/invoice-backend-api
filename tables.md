@@ -105,6 +105,7 @@
 | Amount | DECIMAL | NOT NULL | Paid amount |
 | PaymentDate | DATE | NOT NULL | Payment date |
 | PaymentMethod | ENUM | Cash/Bank/Mobile/Cheque | Payment type |
+| Status | ENUM | Pending/Settled/Failed/Refunded | Payment state |
 | Reference | VARCHAR | NULL | Transaction reference |
 | CreatedAt | TIMESTAMP | DEFAULT now() | Record time |
 
