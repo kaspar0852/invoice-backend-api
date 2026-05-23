@@ -1,11 +1,13 @@
 from fastapi import APIRouter
 from app.core.route_class import StandardAPIRoute
+from app.api.v1.routes.auth_route import router as auth_router
 from app.api.v1.routes.users import router as users_router
 from app.api.v1.routes.customers_route import router as customers_router
 from app.api.v1.routes.invoices_route import router as invoices_router
 from app.api.v1.routes.dashboard_route import router as dashboard_router
 
 api_router = APIRouter(route_class=StandardAPIRoute)
+api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(users_router, prefix="/users", tags=["users"])
 api_router.include_router(customers_router, prefix="/customers", tags=["customers"])
 api_router.include_router(invoices_router, prefix="/invoices", tags=["invoices"])

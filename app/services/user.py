@@ -2,7 +2,7 @@ import uuid
 from typing import List
 from app.models.user import User
 from fastapi import HTTPException, status
-import bcrypt
+from app.core.security import hash_password, verify_password
 from app.repositories import UserRepositoryInterface
 from app.schemas import UserRead, UserCreate, UserUpdate
 
@@ -10,21 +10,6 @@ from app.schemas import UserRead, UserCreate, UserUpdate
 class UserService:
     def __init__(self, repository: UserRepositoryInterface):
         self.repository = repository
-
-    @staticmethod
-    def hash_password(password: str) -> str:
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(
-            password.encode("utf-8"),
-            salt
-        ).decode("utf-8")
-
-    @staticmethod
-    def verify_password(plain: str, hashed: str) -> bool:
-        return bcrypt.checkpw(
-            plain.encode("utf-8"),
-            hashed.encode("utf-8")
-        )
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> UserRead:
         user = await self.repository.get_by_id(user_id)
@@ -70,7 +55,7 @@ class UserService:
             full_name=schema.full_name,
             phone=schema.phone,
             is_active=schema.is_active,
-            password_hash=self.hash_password(schema.password)
+            password_hash=hash_password(schema.password)
         )
 
         created_user = await self.repository.create(db_user)
@@ -105,7 +90,7 @@ class UserService:
 
         # apply updates
         if "password" in update_data:
-            update_data["password_hash"] = self.hash_password(update_data.pop("password"))
+            update_data["password_hash"] = hash_password(update_data.pop("password"))
 
         if "email" in update_data:
             db_user.email = update_data["email"]
