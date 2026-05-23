@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional
 import uuid
 
@@ -6,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
 from app.repositories.invoice_repository import InvoiceRepository
-from app.schemas.invoice_dto import InvoiceRead, InvoiceCreate, InvoiceUpdate
+from app.schemas.invoice_dto import InvoiceRead, InvoiceCreate, InvoiceUpdate, InvoiceStatusUpdate, InvoiceSearchResponse
+from app.models.invoice import InvoiceStatus
 from app.services.invoice_service import InvoiceService
 from app.core.route_class import StandardAPIRoute
 
@@ -32,12 +34,34 @@ async def create_invoice(
     return await service.create_invoice(schema)
 
 
-@router.get("/", response_model=List[InvoiceRead])
-async def list_invoices(
-    business_id: Optional[uuid.UUID] = Query(default=None),
+@router.get("/", response_model=InvoiceSearchResponse)
+async def search_invoices(
+    business_id: uuid.UUID = Query(...),
+    customer_id: Optional[uuid.UUID] = Query(default=None),
+    invoice_number: Optional[str] = Query(default=None, max_length=100),
+    customer_name: Optional[str] = Query(default=None, max_length=255),
+    status: Optional[List[InvoiceStatus]] = Query(default=None),
+    created_after: Optional[date] = Query(default=None),
+    created_before: Optional[date] = Query(default=None),
+    due_after: Optional[date] = Query(default=None),
+    due_before: Optional[date] = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     service: InvoiceService = Depends(get_invoice_service),
-) -> List[InvoiceRead]:
-    return await service.list_invoices(business_id)
+) -> InvoiceSearchResponse:
+    return await service.search_invoices(
+        business_id=business_id,
+        customer_id=customer_id,
+        invoice_number=invoice_number,
+        customer_name=customer_name,
+        status=status,
+        created_after=created_after,
+        created_before=created_before,
+        due_after=due_after,
+        due_before=due_before,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.get("/customer/{customer_id}", response_model=List[InvoiceRead])
@@ -82,3 +106,21 @@ async def delete_invoice(
     service: InvoiceService = Depends(get_invoice_service),
 ) -> None:
     await service.delete_invoice(invoice_id)
+
+
+@router.patch("/{invoice_id}/status", response_model=InvoiceRead)
+async def update_invoice_status(
+    invoice_id: uuid.UUID,
+    schema: InvoiceStatusUpdate,
+    service: InvoiceService = Depends(get_invoice_service),
+) -> InvoiceRead:
+    return await service.update_status(invoice_id, schema.status)
+
+
+@router.post("/{invoice_id}/check-overdue", response_model=InvoiceRead)
+async def check_and_mark_overdue(
+    invoice_id: uuid.UUID,
+    service: InvoiceService = Depends(get_invoice_service),
+) -> InvoiceRead:
+    return await service.check_and_mark_overdue(invoice_id)
+

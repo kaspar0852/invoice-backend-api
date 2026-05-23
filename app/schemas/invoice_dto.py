@@ -68,3 +68,17 @@ class InvoiceRead(InvoiceBase):
     total_amount: Decimal
     created_at: datetime
     items: List[InvoiceItemRead]
+
+
+class InvoiceStatusUpdate(BaseModel):
+    status: InvoiceStatus
+
+
+class InvoiceSearchResponse(BaseModel):
+    items: List[InvoiceRead]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+
