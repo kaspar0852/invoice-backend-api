@@ -132,6 +132,105 @@ PYTHONPATH=. uv run pytest
 
 ---
 
+## 📌 Implemented API Surface
+
+The repository currently includes these business-facing API areas under `/api/v1`:
+
+* `customers`
+  * `GET /customers/{customer_id}?business_id=...`
+  * `GET /customers/{customer_id}/invoices?business_id=...`
+  * `GET /customers/{customer_id}/payments?business_id=...`
+  * `GET /customers/{customer_id}/balance?business_id=...`
+  * `GET /customers/{customer_id}/transactions?business_id=...`
+* `invoices`
+  * `GET /invoices/`
+  * `GET /invoices/customer/{customer_id}?business_id=...`
+* `dashboard`
+  * `GET /dashboard/financial-summary?business_id=...`
+  * `GET /dashboard/outstanding-payments?business_id=...`
+  * `POST /dashboard/reminders`
+
+OpenAPI docs are available at `/docs` when the app is running locally.
+
+---
+
+## 📊 Dashboard Endpoints
+
+### Financial Summary
+
+```http
+GET /api/v1/dashboard/financial-summary?business_id=<uuid>&start_date=2026-05-01&end_date=2026-05-23
+```
+
+Behavior:
+* `business_id` is required for tenant isolation.
+* `start_date` and `end_date` are optional and must use `YYYY-MM-DD`.
+* When omitted, the period defaults to the first day of the current month through today.
+* Validation errors return custom messages such as `Invalid date format. Use YYYY-MM-DD` and `end_date cannot be in the future`.
+
+Response shape:
+* `business_id`
+* `period`
+* `metrics.revenue`
+* `metrics.vat_liability`
+* `metrics.outstanding_receivables`
+
+### Outstanding Payments
+
+```http
+GET /api/v1/dashboard/outstanding-payments?business_id=<uuid>&status=Overdue&limit=25&offset=0
+```
+
+Optional filters:
+* `status`: `Sent`, `Partial`, or `Overdue`
+* `customer_id`
+* `limit` and `offset`
+
+Response shape:
+* `business_id`
+* `invoices[]` with invoice, customer, aging, and remaining balance fields
+* `summary.total_outstanding`
+* `summary.total_invoices`
+* `pagination.limit`
+* `pagination.offset`
+* `pagination.total`
+
+### Send Payment Reminders
+
+```http
+POST /api/v1/dashboard/reminders
+Content-Type: application/json
+
+{
+  "business_id": "<uuid>",
+  "invoice_ids": ["<invoice-uuid>"]
+}
+```
+
+Behavior:
+* Sends plain-text email reminders for eligible outstanding invoices.
+* Returns both `sent` and `skipped` arrays so batch requests can partially succeed.
+* Skip reasons include missing invoices, non-outstanding statuses, missing customer email, and SMTP delivery failures.
+* Reminder delivery and logging are synchronous in the current slice.
+
+---
+
+## ✉️ SMTP Configuration
+
+Reminder emails require the SMTP settings in `.env`:
+
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+SMTP_FROM_NAME="Invoice System"
+```
+
+Notes:
+* `SMTP_FROM_NAME` should be a display name only, not a full `"Name <email>"` value.
+* If SMTP settings are incomplete, reminder requests will skip delivery with an SMTP configuration error.
+
 ## 🧰 Demo Data Scripts
 
 The repository includes two shell utilities for local development:
